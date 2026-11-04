@@ -31,7 +31,7 @@ Run everything inside one Ubuntu 24.04 VM so the lab is the same on any machine.
 
 | Laptop | How to get the Ubuntu VM |
 | --- | --- |
-| macOS (Intel or Apple Silicon) | OrbStack, Lima, or UTM; use the arm64 image on Apple Silicon |
+| macOS (Intel or Apple Silicon) | OrbStack (recommended; see [setup/README.md](setup/README.md#macos-on-apple-silicon)), Lima, or UTM; use the arm64 image on Apple Silicon. Docker Desktop and VirtualBox aren't needed |
 | Windows | WSL2 with Ubuntu; if bpftrace misbehaves, use a Hyper-V or VirtualBox VM instead |
 | Linux | Run natively, no VM needed |
 

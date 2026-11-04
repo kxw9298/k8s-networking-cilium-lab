@@ -22,7 +22,8 @@ sudo apt-get install -y \
 
 echo "==> bpftool (matches the running kernel)"
 if ! sudo apt-get install -y "linux-tools-$(uname -r)"; then
-  echo "WARNING: no linux-tools package for kernel $(uname -r); bpftool will be unavailable." >&2
+  echo "WARNING: no linux-tools package for kernel $(uname -r) (common on OrbStack, WSL2 and other custom kernels)." >&2
+  echo "         Once Cilium runs, use its copy: kubectl -n kube-system exec ds/cilium -- bpftool prog show" >&2
 fi
 
 echo "==> Docker"
