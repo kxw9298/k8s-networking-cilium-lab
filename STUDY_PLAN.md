@@ -50,9 +50,23 @@ cilium connectivity test
 
 Nodes stay NotReady until Cilium is installed; that's expected. kube-proxy replacement needs cgroup v2, which Ubuntu 24.04 uses by default ([Cilium kind guide](https://docs.cilium.io/en/stable/installation/kind/)).
 
+## Fundamentals
+
+These are the concepts behind the labs. Learn each one before the week that uses it, and aim to explain it in your own words rather than memorize details.
+
+| Area | Key ideas to understand | When | Start here |
+| --- | --- | --- | --- |
+| Networking basics | IP addresses and CIDR subnets; ARP and MAC addresses; routing and default gateways; TCP vs UDP and ports; NAT (SNAT, DNAT); DNS resolution; MTU, and why encapsulation shrinks it | Before week 1 | Any networking primer you trust |
+| Linux networking | Network namespaces isolate a network stack; veth pairs connect namespaces; bridges switch between them; the routing table picks the next hop; netfilter/iptables chains rewrite and filter packets; conntrack remembers connections | Week 1 | `man ip`, `man iptables` |
+| Kubernetes networking model | Every pod gets its own IP and reaches every other pod without NAT; a Service is a stable virtual IP over changing pods (EndpointSlices); kube-proxy or eBPF turns Service IPs into pod IPs; CoreDNS maps names to Services; NetworkPolicy only allows, and only works if the CNI enforces it | Week 1 | [Kubernetes: Services, load balancing, and networking](https://kubernetes.io/docs/concepts/services-networking/) |
+| CNI | A spec, not a product: the container runtime calls a plugin binary with ADD or DEL and a JSON config; the plugin creates the pod's interface, gets an IP from IPAM, and sets routes; cross-node traffic goes through an overlay, native routing (or BGP), or the cloud VPC | Week 2 | [CNI specification](https://github.com/containernetworking/cni/blob/main/SPEC.md) |
+| eBPF | Small programs the kernel checks with a verifier, then runs at hooks (XDP, tc, sockets, kprobes); maps share state between kernel and user space; hash lookups replace long iptables rule chains, and the same hooks give deep visibility | Week 3 | [What is eBPF?](https://ebpf.io/what-is-ebpf/) |
+| Cilium architecture | An agent on every node plus an operator; each workload gets a security identity from its labels, so policy follows identity, not IP; eBPF on each pod interface handles routing, load balancing, and policy; Envoy adds L7; Hubble reads flows from the datapath; Cluster Mesh shares identities and Services across clusters | Weeks 3–4 | [Cilium component overview](https://docs.cilium.io/en/stable/overview/component-overview/) |
+| Troubleshooting and security | Debug layer by layer: DNS, Service, endpoints, pod, node, policy; isolate tenants in layers (namespace, RBAC, quotas, network policy); Zero Trust means identity-based access, least privilege, and encryption in transit | Throughout | Your own lab notes |
+
 ## Four-week plan
 
-Each week is about 10–12 hours: roughly 4 hours reading and 6–8 hours in the lab. Commit each lab's scripts and notes under [`labs/`](labs/) as you go.
+Each week is about 10–12 hours: roughly 4 hours on the matching Fundamentals rows and 6–8 hours in the lab. Commit each lab's scripts and notes under [`labs/`](labs/) as you go.
 
 ### Week 1: Linux and Kubernetes networking
 
