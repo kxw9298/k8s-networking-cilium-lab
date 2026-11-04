@@ -4,15 +4,8 @@
 
 Pick one:
 
-- **Cloud (recommended for laptops with 8 GB RAM):** a GCP e2-standard-8 (8 vCPU, 32 GB).
-  ```bash
-  gcloud config set project <your-project>
-  ./setup/gcp-vm.sh create
-  ./setup/gcp-vm.sh config-ssh   # then connect with VS Code Remote-SSH
-  ./setup/gcp-vm.sh stop         # after every session
-  ```
-  Set a billing budget alert before you start.
-- **Local:** OrbStack, Lima, or UTM on macOS (arm64 image on Apple Silicon), WSL2 on Windows, or native Linux. Give the VM 4–6 vCPUs, 8–12 GB RAM, and 50 GB disk.
+- **Cloud (recommended for laptops with 8 GB RAM):** a GCP e2-standard-8 (8 vCPU, 32 GB), managed with Terraform in [`../terraform/lab-vm-gcp/`](../terraform/lab-vm-gcp/). SSH goes through IAP only, and you stop the VM between sessions with `terraform apply -var running=false`. See [`../terraform/README.md`](../terraform/README.md).
+- **Local:** OrbStack, Lima, or UTM on macOS (arm64 image on Apple Silicon), VirtualBox or Hyper-V, WSL2 on Windows, or native Linux. Give the VM 4–6 vCPUs, 8–12 GB RAM, and 50 GB disk.
 
 ## 2. Install the toolchain
 

@@ -19,9 +19,9 @@ Everything except the managed cloud CNIs runs locally. Cilium needs a Linux kern
 
 **Machine sizing:** 16 GB RAM minimum (32 GB comfortable), 4+ cores (8 better), and 50 GB free SSD. Intel, AMD, and Apple Silicon all work. Use a personal machine rather than a managed work laptop.
 
-**If your laptop has 8 GB RAM:** that's too little for the full plan. Run the lab on a cloud Ubuntu 24.04 VM instead, such as a GCP e2-standard-8 (8 vCPU, 32 GB), at about $0.27 an hour on demand ([Vantage](https://instances.vantage.sh/gcp/e2-standard-8)). [`setup/gcp-vm.sh`](setup/gcp-vm.sh) creates, starts, and stops it. Connect with VS Code Remote-SSH, stop the VM after each session, and set a budget alert; four weeks should cost roughly $15–25. kind runs its nodes as containers, so the VM needs no nested virtualization.
+**If your laptop has 8 GB RAM:** that's too little for the full plan. Run the lab on a cloud Ubuntu 24.04 VM instead, such as a GCP e2-standard-8 (8 vCPU, 32 GB), at about $0.27 an hour on demand ([Vantage](https://instances.vantage.sh/gcp/e2-standard-8)). [`terraform/lab-vm-gcp`](terraform/lab-vm-gcp/) creates it with Terraform, and you stop it between sessions with `terraform apply -var running=false`. Connect with VS Code Remote-SSH, stop the VM after each session, and set a budget alert; four weeks should cost roughly $15–25. kind runs its nodes as containers, so the VM needs no nested virtualization.
 
-**Cloud cost for managed-CNI sessions:** create each cluster, test, and delete it the same day; it should cost a few dollars. Use a personal cloud account.
+**Cloud cost for managed-CNI sessions:** create each cluster with [`terraform/gke-dataplane-v2`](terraform/gke-dataplane-v2/) or [`terraform/eks-vpc-cni`](terraform/eks-vpc-cni/), test, and `terraform destroy` the same day; it should cost a few dollars. Use a personal cloud account.
 
 **GKE note:** [Dataplane V2 is Google-managed Cilium](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/dataplane-v2), run as the `anetd` DaemonSet, and GKE does not allow custom eBPF programs on those nodes. Learn on upstream Cilium in the lab, then use a GKE session to see how Google packages it.
 

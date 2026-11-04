@@ -1,0 +1,14 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is git-ignored.
+project_id = "your-personal-project-id"
+
+# region       = "us-east1"
+# zone         = "us-east1-b"
+# machine_type = "e2-standard-8"
+# spot         = false
+
+# Optional: direct SSH from your own IP in addition to IAP.
+# ssh_source_ranges = ["203.0.113.10/32"]
+
+# Optional: monthly budget alert (emails billing admins at 50%, 90%, 100%).
+# billing_account_id = "XXXXXX-XXXXXX-XXXXXX"
+# budget_usd         = 30

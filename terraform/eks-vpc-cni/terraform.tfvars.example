@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is git-ignored.
+
+# Pick a version in EKS standard support; older versions cost extra.
+kubernetes_version = "1.xx"
+
+# Your public IP, so only you can reach the Kubernetes API.
+api_allowed_cidrs = ["203.0.113.10/32"]
+
+# region                   = "us-east-1"
+# instance_type            = "t3.medium"
+# node_count               = 2
+# spot                     = true
+# enable_prefix_delegation = false

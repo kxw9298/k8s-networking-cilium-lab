@@ -3,7 +3,8 @@
 Hands-on labs for Kubernetes networking, CNI internals, eBPF, and Cilium, built over four weeks on kind clusters.
 
 - **The plan:** [STUDY_PLAN.md](STUDY_PLAN.md) has the week-by-week tasks, use cases, and self-check questions.
-- **Environment:** [setup/](setup/) creates the Ubuntu lab VM, installs the toolchain, and defines the base kind cluster.
+- **Environment:** [setup/](setup/) installs the toolchain and defines the base kind cluster (bash, for any Ubuntu VM).
+- **Cloud infrastructure:** [terraform/](terraform/) creates the GCP lab VM and the short-lived GKE Dataplane V2 and EKS clusters.
 - **Labs:** [labs/](labs/) holds one folder per lab with its scripts, manifests, and findings.
 
 ## Quick start
