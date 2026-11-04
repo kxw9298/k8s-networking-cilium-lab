@@ -1,0 +1,11 @@
+# Base lab cluster: three nodes, no default CNI and no kube-proxy, so Cilium handles
+# pod networking, Services, and policy.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  disableDefaultCNI: true
+  kubeProxyMode: none
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker

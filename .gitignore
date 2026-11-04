@@ -1,0 +1,4 @@
+.DS_Store
+*.kubeconfig
+*.tgz
+*.tar.gz
