@@ -13,6 +13,22 @@ Nothing in the study plan changes. Each stage below names the study plan section
 
 Goals 2 and 3 do not depend on each other, so run them in either order once goal 1 is done.
 
+## Core path
+
+The stages are not equally important. Follow the core path first, and pick up an extension only when a later stage needs it. Inside each stage, tasks are grouped under **Core** and **Extensions**.
+
+| Order | What | Why it is core |
+| --- | --- | --- |
+| 1 | STUDY_PLAN.md: "Linux and Kubernetes networking", "CNI internals", and "eBPF and Cilium core" | The foundation every stage here assumes, and the first Go practice |
+| 2 | Stage 1: Cilium for agent workloads | The central problem, solved by hand. Publish it as soon as it works |
+| 3 | Stage 2: Go fundamentals | Needed to read and write everything after it |
+| 4 | Stage 3: How operators run agents | What an operator does for an agent, seen in two real projects |
+| 5 | Stage 4, core tasks: operator fundamentals | Enough to read operator code |
+| 6 | Stage 5, core tasks: explain the dataplane | The "explain" level of the deep dive |
+| 7 | Stage 6, core tasks: the authorization service with a static allow-list | The "build" level of the deep dive, in its smallest useful form |
+
+Stages 7 and 8 come after the core path. The "Cilium advanced" section of the study plan is an extension too, apart from its Gateway API task, which stage 6 uses.
+
 ## The deep-dive area
 
 The area is the Kubernetes dataplane and L7 traffic security: eBPF with Cilium underneath, Envoy with Gateway API on top. It is worth going deep on for three reasons.
@@ -45,7 +61,7 @@ Operators for agents and for agent egress already exist, so this plan does not b
 | [kagent](https://kagent.dev) | Agents, model configurations, and MCP tool servers as custom resources, reconciled by an operator | Run it to see how an operator turns a custom resource into a working agent |
 | [agentgateway](https://agentgateway.dev) | A gateway that understands MCP and agent-to-agent traffic and can authorize individual tools | The reference for tool-level rules at the gateway |
 | Cilium | FQDN and L7 network policy, with Hubble for flow evidence | The enforcement layer in every lab |
-| Small operators such as [kaalm](https://github.com/win07xp/kaalm/pull/272) and [agent-access-control](https://github.com/agentoperations/agent-access-control) | Generate egress policy for agents from an allow-list | Compare your practice operator with them after you write it |
+| Small operators such as [kaalm](https://github.com/win07xp/kaalm/pull/272) and [agent-access-control](https://github.com/agentoperations/agent-access-control) | Generate egress policy for agents from an allow-list | Compare your practice operator with them, if you write one |
 
 ## How this plan uses the study plan
 
@@ -54,10 +70,10 @@ Operators for agents and for agent egress already exist, so this plan does not b
 | 1. Cilium for agent workloads | "eBPF and Cilium core": Cilium installed, the policy tasks (default-deny, L7 HTTP, `toFQDNs`), and Hubble |
 | 2. Go fundamentals | "CNI internals": the Go CNI plugin |
 | 3. How operators run agents | Stage 1 |
-| 4. Write a practice operator | Stages 2 and 3 |
+| 4. Operator fundamentals | Stages 2 and 3 |
 | 5. Explain the dataplane | Stage 1; "eBPF and Cilium core": the eBPF basics, bpftrace, and the datapath inspection task |
 | 6. Build and debug at L7 | Stages 2 and 5; "eBPF and Cilium core": the XDP counter in Go; "Cilium advanced": the Gateway API task |
-| 7. Contribute upstream | Stage 4 |
+| 7. Contribute upstream | Stage 4, including its practice operator extension |
 | 8. Attack suite and test matrix | Stage 3; the optional GKE Dataplane V2 cloud session and [`terraform/gke-dataplane-v2`](terraform/gke-dataplane-v2/) |
 
 The Cluster Mesh and BGP labs are not prerequisites for any stage here. The WireGuard lab is a useful comparison for the mutual TLS task in Stage 5. Do them in whatever order suits you.
@@ -72,6 +88,8 @@ Labs for this plan go under [`labs/`](labs/) with the prefix `as` (agent securit
 
 Goal: show, by hand, that a compromised agent cannot send data out.
 
+**Core** (the whole stage)
+
 - [ ] `as1-agent-egress-baseline`: on the base cluster, run an "agent" pod in an `agents` namespace and an MCP server in an `mcp-tools` namespace; confirm the agent can reach anything by default
 - [ ] Apply default-deny egress for the agent, then allow only DNS, the model endpoint by `toFQDNs`, and the MCP server by label
 - [ ] Simulate exfiltration to an unlisted domain, to the cloud metadata address, and to a Service in another namespace; capture each drop and its reason in Hubble
@@ -79,20 +97,26 @@ Goal: show, by hand, that a compromised agent cannot send data out.
 - [ ] `as2-mcp-tool-allowlist`: since the 2026-07-28 MCP specification, Streamable HTTP requests carry the method and tool name in the `Mcp-Method` and `Mcp-Name` headers. Add an L7 HTTP rule on the MCP server port that matches them; confirm an unlisted tool call is refused while `tools/list` and the allowed tools still work. Check the exact rule syntax against the Cilium docs for your version
 - [ ] Send a request whose `Mcp-Name` header names an allowed tool while the body calls another; record whether the server rejects it, as the specification requires
 - [ ] Checkpoint: explain why an IP-based NetworkPolicy cannot do this, and where each blocked request was dropped
+- [ ] Publish: commit the `as1` and `as2` write-ups and mark stage 1 done in the progress table below, so there is something to show early
 
 ### Stage 2: Go fundamentals
 
 Goal: read and write everyday Go without looking things up.
 
+**Core** (the whole stage)
+
 - [ ] Finish [A Tour of Go](https://go.dev/tour/)
 - [ ] Add table-driven tests to the Go CNI plugin from the study plan
 - [ ] Practise the parts operators lean on: interfaces, error wrapping, `context`, goroutines and channels, and struct tags for JSON and YAML
 - [ ] Write a small client-go program that watches pods with an informer and prints changes
+- [ ] gRPC basics: define a small service in protobuf, generate the Go code, and write a client and server for one call. The Envoy authorizer in stage 6 uses the same pattern
 - [ ] Checkpoint: explain what an informer caches, and why you read from the cache instead of calling the API server each time
 
 ### Stage 3: How operators run agents
 
 Goal: see what an operator does for an AI agent before you write one.
+
+**Core**
 
 - [ ] `as3-agent-sandbox`: install a pinned agent-sandbox release; create a SandboxTemplate and a claim; list every object the operator created and the NetworkPolicy it manages
 - [ ] Create a Sandbox directly and confirm it gets no NetworkPolicy; layer an FQDN policy on top with Cilium
@@ -100,21 +124,31 @@ Goal: see what an operator does for an AI agent before you write one.
 - [ ] `as4-kagent`: install a pinned kagent release; create a model configuration, an MCP server, and an agent as custom resources. It needs a model provider: use a small local model, or an API key kept out of the repo
 - [ ] Trace one agent request in Hubble: agent to model endpoint, agent to MCP server. Then apply the Stage 1 policy to it, break it on purpose, and fix it
 - [ ] Read agent-sandbox's controller code for the SandboxTemplate NetworkPolicy; note how it uses owner references, status, and labels
-- [ ] Optional: run one sandbox under the gVisor RuntimeClass and repeat the FQDN test
 - [ ] Checkpoint: for one custom resource in each project, explain what the operator watches, what it creates, and what it writes to status
 
-### Stage 4: Write a practice operator
+**Extensions**
 
-Goal: write a small operator yourself, to learn the pattern. This is a learning prototype, not a product.
+- [ ] Run one sandbox under the gVisor RuntimeClass and repeat the FQDN test
+
+### Stage 4: Operator fundamentals
+
+Goal: understand the operator pattern well enough to read one. Writing your own is an extension, and becomes necessary before you contribute to operator code in stage 7.
+
+**Core**
 
 - [ ] Work through the [Kubebuilder](https://book.kubebuilder.io) quick start and its CronJob tutorial
 - [ ] Read the [controller-runtime](https://github.com/kubernetes-sigs/controller-runtime) docs on reconcilers, owner references, finalizers, status conditions, and envtest
+- [ ] Checkpoint: explain informer, work queue, and reconcile loop, and why a reconciler must be level-triggered and idempotent
+
+**Extensions: a practice operator**
+
+This is a learning prototype, not a product.
+
 - [ ] `as5-practice-operator`: scaffold an operator with one custom resource, `AgentEgressPolicy`, that lists what an agent may reach
 - [ ] Reconcile it into a `CiliumNetworkPolicy` owned by the custom resource: DNS rule, `toFQDNs`, and endpoint rules
 - [ ] Set a status condition that says whether the policy is enforced, with a reason when the cluster has no Cilium CRDs
 - [ ] envtest coverage for create, update, and delete; then rerun the Stage 1 exfiltration test against a policy your operator generated
 - [ ] Compare your design with kaalm's FQDN synthesis and agent-sandbox's managed NetworkPolicy; write down what they do better
-- [ ] Checkpoint: explain informer, work queue, and reconcile loop, and why a reconciler must be level-triggered and idempotent
 
 A minimal shape for the custom resource:
 
@@ -141,46 +175,58 @@ status:
 
 Goal: explain, from the kernel up, what happens to one agent request.
 
+**Core**
+
 - [ ] `as6-dataplane-walkthrough`: pick one request from the Stage 1 lab (agent to MCP server) and trace it hop by hop: pod veth, the eBPF programs on it, the policy lookup, the redirect to Envoy for L7, and the reply path
 - [ ] Identities: list the security identities Cilium gave the agent and the MCP server, change a label, and watch the identity and the policy verdict change
 - [ ] FQDN policy internals: watch the DNS proxy see a lookup, find the FQDN-to-IP entry it created, and show what happens when the record's TTL expires
 - [ ] Read the eBPF state behind a decision: the policy map for the agent's endpoint, the connection-tracking entry for the flow, and the Service load-balancing map. Use `cilium-dbg` and `bpftool`, and check the command names against your Cilium version
 - [ ] L7 path: confirm which Envoy handles the agent's HTTP request, read the listener and filter configuration it was given, and find the access log entry for one allowed and one denied call
-- [ ] Mutual TLS: give two workloads identities with a mesh or Cilium's ztunnel integration (beta at the time of writing), capture the traffic, and show what an observer on the node can and cannot see. Compare it with the WireGuard lab
 - [ ] Draw the whole path as one diagram, with the hook or component that makes each decision
 - [ ] Checkpoint: explain to someone else, without notes, why an FQDN rule keeps working when the destination's IP address changes
+
+**Extensions**
+
+- [ ] Mutual TLS: give two workloads identities with a mesh or Cilium's ztunnel integration (beta at the time of writing), capture the traffic, and show what an observer on the node can and cannot see. Compare it with the WireGuard lab
 
 ### Stage 6: Build and debug at L7
 
 Goal: write code that sits in the traffic path, and find faults in it.
 
-- [ ] `as7-ebpf-flow-counter`: extend the XDP counter from the study plan into a small eBPF program, loaded from Go with [`cilium/ebpf`](https://github.com/cilium/ebpf), that counts connections per destination on the veth of one of the hand-built namespaces
-- [ ] `as8-mcp-ext-authz`: write an Envoy external-authorization service in Go. It receives the request headers, reads `Mcp-Method` and `Mcp-Name` and the caller's identity, and answers allow or deny
+**Core**
+
+- [ ] `as8-mcp-ext-authz`: write an Envoy external-authorization service in Go. It receives the request headers, reads `Mcp-Method` and `Mcp-Name` and the caller's identity, and answers allow or deny from a static allow-list
 - [ ] Put it in front of the MCP server through an Envoy-based Gateway API implementation that supports external authorization; record which one you used and how you wired it
-- [ ] Start with a static allow-list, then move the decision into a policy engine such as Open Policy Agent so rules change without a rebuild
+- [ ] Decide what happens when the authorizer is slow or down, and test it
+- [ ] Checkpoint: an allowed tool call succeeds and an unlisted one is denied at the gateway, with a test that proves both
+
+**Extensions**
+
+- [ ] Move the decision into a policy engine such as Open Policy Agent so rules change without a rebuild
 - [ ] Have the service read the request body as well, and reject any request whose headers and body disagree
 - [ ] Add a decision log and metrics, and carry the trace context through so one tool call shows up as one trace across agent, gateway, authorizer, and MCP server
 - [ ] Compare your service with agentgateway's built-in MCP authorization; write down what it does that yours does not
+- [ ] `as7-ebpf-flow-counter`: extend the XDP counter from the study plan into a small eBPF program, loaded from Go with [`cilium/ebpf`](https://github.com/cilium/ebpf), that counts connections per destination on the veth of one of the hand-built namespaces
 - [ ] `as9-fault-finding`: break the path on purpose, one fault at a time (a wrong policy, a DNS rule that is too tight, an MTU mismatch, an authorizer that times out), and find each one with Hubble, `cilium-dbg monitor`, and [`pwru`](https://github.com/cilium/pwru). Keep the steps as a troubleshooting runbook
-- [ ] Checkpoint: given a dropped or denied request you have not seen before, say which layer stopped it within a few minutes
+- [ ] Checkpoint for the runbook: given a dropped or denied request you have not seen before, say which layer stopped it within a few minutes
 
 ## Goal 3: Contribute
 
 ### Stage 7: Contribute upstream
 
-Goal: get a change reviewed and merged in a project people already use. Reviews take a while, so start small.
+Goal: get a change reviewed and merged in a project people already use. Reviews take a while, so start small. This stage comes after the core path; do the practice operator extension in stage 4 before you touch controller code.
 
 - [ ] Read the agent-sandbox contributing guide and follow its issue tracker; note any documentation or example gap you hit in Stage 3
 - [ ] Open a small pull request, for example a Cilium FQDN egress example next to the project's existing network policy examples
 - [ ] Pick up a small bug or test task in the controller code
-- [ ] If you needed a feature in the labs, open a design discussion for it, with your practice operator as the working reference
+- [ ] If you needed a feature in the labs, open a design discussion for it, with your practice operator as the working reference if you built one
 - [ ] Checkpoint: one merged pull request
 
 ## Goal 4: Verify
 
 ### Stage 8: Attack suite and test matrix
 
-Goal: prove what each existing option stops, and say plainly what it doesn't.
+Goal: prove what each existing option stops, and say plainly what it doesn't. This stage comes after the core path.
 
 - [ ] Attack suite: one scripted scenario per threat (unlisted domain, metadata address, cross-namespace Service, DNS exfiltration, unlisted tool, header and body mismatch), each with an expected result
 - [ ] Run it against each option: plain NetworkPolicy, agent-sandbox's managed policy, Cilium FQDN and L7 policy, tool rules at agentgateway, and your external-authorization service if you have built it
@@ -211,6 +257,7 @@ Goal: prove what each existing option stops, and say plainly what it doesn't.
 
 ## Risks and open questions
 
+- **Scope.** The two plans together are large. Follow the core path, and leave an extension alone until a later stage needs it.
 - **L7 header matching is unproven here.** Stage 1 tests it before anything else depends on it.
 - **GKE Dataplane V2 limits.** Reports say it rejects Cilium L7 rules, and FQDN network policy has its own requirements. Verify both in the GKE session.
 - **Fast-moving projects.** agent-sandbox and kagent release often, so pin a release for each lab and note it.
@@ -241,16 +288,16 @@ Answer each of these out loud without notes.
 
 ## Progress
 
-| Goal | Stage | Focus | Status |
-| --- | --- | --- | --- |
-| Get familiar | 1 | Cilium for agent workloads | Not started |
-| Get familiar | 2 | Go fundamentals | Not started |
-| Get familiar | 3 | How operators run agents | Not started |
-| Get familiar | 4 | Write a practice operator | Not started |
-| Go deep | 5 | Explain the dataplane | Not started |
-| Go deep | 6 | Build and debug at L7 | Not started |
-| Contribute | 7 | Contribute upstream | Not started |
-| Verify | 8 | Attack suite and test matrix | Not started |
+| Goal | Stage | Focus | Core path | Status |
+| --- | --- | --- | --- | --- |
+| Get familiar | 1 | Cilium for agent workloads | Whole stage | Not started |
+| Get familiar | 2 | Go fundamentals | Whole stage | Not started |
+| Get familiar | 3 | How operators run agents | Core tasks | Not started |
+| Get familiar | 4 | Operator fundamentals | Core tasks | Not started |
+| Go deep | 5 | Explain the dataplane | Core tasks | Not started |
+| Go deep | 6 | Build and debug at L7 | Core tasks | Not started |
+| Contribute | 7 | Contribute upstream | After the core path | Not started |
+| Verify | 8 | Attack suite and test matrix | After the core path | Not started |
 
 ## Sources
 
