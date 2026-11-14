@@ -6,9 +6,28 @@ Nothing in the study plan changes. Each stage below names the study plan section
 
 ## Goals, in order
 
-1. **Get familiar.** Cilium, Go, and Kubernetes operators, and how each of them is used to run and secure AI agents. This is the first goal, and most of the plan.
-2. **Contribute.** Put what you learned into an existing project instead of building a competing one.
-3. **Verify.** Test the existing options against the same attacks and publish what holds and what doesn't.
+1. **Get familiar.** Cilium, Go, and Kubernetes operators, and how each of them is used to run and secure AI agents. This is the first goal.
+2. **Go deep.** One networking area taken past "can use it" to "can explain, build, and debug it": the Kubernetes dataplane and L7 traffic security.
+3. **Contribute.** Put what you learned into an existing project instead of building a competing one.
+4. **Verify.** Test the existing options against the same attacks and publish what holds and what doesn't.
+
+Goals 2 and 3 do not depend on each other, so run them in either order once goal 1 is done.
+
+## The deep-dive area
+
+The area is the Kubernetes dataplane and L7 traffic security: eBPF with Cilium underneath, Envoy with Gateway API on top. It is worth going deep on for three reasons.
+
+- **Few people cover both sides.** Network engineers rarely know Kubernetes internals, and platform engineers rarely understand the packet path.
+- **It is where agent security is enforced.** Agent and MCP gateways are built on Envoy and the Gateway API, so the same skills apply directly to agent platforms.
+- **It joins the other pieces.** Policy, workload identity, firewalls, and tracing all meet in this layer.
+
+Depth here has three levels. Most people stop at the first.
+
+| Level | You can | Where in this plan |
+| --- | --- | --- |
+| Use | Write FQDN and L7 policies and Gateway API routes; read Hubble flows | Stage 1, and the Gateway API task in the study plan |
+| Explain | Trace a packet through the eBPF hooks; explain how identities and the FQDN-to-IP map are built, how traffic is redirected to Envoy, and how mutual TLS is established | Stage 5 |
+| Build and debug | Write a small eBPF program; write an Envoy external-authorization service in Go that allows or denies an MCP tool call; find a dropped packet with kernel-level tools | Stage 6 |
 
 ## The problem
 
@@ -18,7 +37,7 @@ Standard Kubernetes NetworkPolicy matches IP addresses, not domain names, so it 
 
 ## What already exists
 
-Operators for agents and for agent egress already exist, so this plan does not build another one as a product. It uses them as study material in goal 1, as the place to contribute in goal 2, and as test subjects in goal 3.
+Operators for agents and for agent egress already exist, so this plan does not build another one as a product. It uses them as study material in goal 1, as the place to contribute in goal 3, and as test subjects in goal 4.
 
 | Project | What it does | How this plan uses it |
 | --- | --- | --- |
@@ -36,10 +55,12 @@ Operators for agents and for agent egress already exist, so this plan does not b
 | 2. Go fundamentals | "CNI internals": the Go CNI plugin |
 | 3. How operators run agents | Stage 1 |
 | 4. Write a practice operator | Stages 2 and 3 |
-| 5. Contribute upstream | Stage 4 |
-| 6. Attack suite and test matrix | Stage 3; the optional GKE Dataplane V2 cloud session and [`terraform/gke-dataplane-v2`](terraform/gke-dataplane-v2/) |
+| 5. Explain the dataplane | Stage 1; "eBPF and Cilium core": the eBPF basics, bpftrace, and the datapath inspection task |
+| 6. Build and debug at L7 | Stages 2 and 5; "eBPF and Cilium core": the XDP counter in Go; "Cilium advanced": the Gateway API task |
+| 7. Contribute upstream | Stage 4 |
+| 8. Attack suite and test matrix | Stage 3; the optional GKE Dataplane V2 cloud session and [`terraform/gke-dataplane-v2`](terraform/gke-dataplane-v2/) |
 
-The Cluster Mesh, BGP, WireGuard, and Gateway API labs are not prerequisites for any stage here. Do them in whatever order suits you.
+The Cluster Mesh and BGP labs are not prerequisites for any stage here. The WireGuard lab is a useful comparison for the mutual TLS task in Stage 5. Do them in whatever order suits you.
 
 ## Lab conventions
 
@@ -114,9 +135,38 @@ status:
     - type: NetworkEnforced
 ```
 
-## Goal 2: Contribute
+## Goal 2: Go deep
 
-### Stage 5: Contribute upstream
+### Stage 5: Explain the dataplane
+
+Goal: explain, from the kernel up, what happens to one agent request.
+
+- [ ] `as6-dataplane-walkthrough`: pick one request from the Stage 1 lab (agent to MCP server) and trace it hop by hop: pod veth, the eBPF programs on it, the policy lookup, the redirect to Envoy for L7, and the reply path
+- [ ] Identities: list the security identities Cilium gave the agent and the MCP server, change a label, and watch the identity and the policy verdict change
+- [ ] FQDN policy internals: watch the DNS proxy see a lookup, find the FQDN-to-IP entry it created, and show what happens when the record's TTL expires
+- [ ] Read the eBPF state behind a decision: the policy map for the agent's endpoint, the connection-tracking entry for the flow, and the Service load-balancing map. Use `cilium-dbg` and `bpftool`, and check the command names against your Cilium version
+- [ ] L7 path: confirm which Envoy handles the agent's HTTP request, read the listener and filter configuration it was given, and find the access log entry for one allowed and one denied call
+- [ ] Mutual TLS: give two workloads identities with a mesh or Cilium's ztunnel integration (beta at the time of writing), capture the traffic, and show what an observer on the node can and cannot see. Compare it with the WireGuard lab
+- [ ] Draw the whole path as one diagram, with the hook or component that makes each decision
+- [ ] Checkpoint: explain to someone else, without notes, why an FQDN rule keeps working when the destination's IP address changes
+
+### Stage 6: Build and debug at L7
+
+Goal: write code that sits in the traffic path, and find faults in it.
+
+- [ ] `as7-ebpf-flow-counter`: extend the XDP counter from the study plan into a small eBPF program, loaded from Go with [`cilium/ebpf`](https://github.com/cilium/ebpf), that counts connections per destination on the veth of one of the hand-built namespaces
+- [ ] `as8-mcp-ext-authz`: write an Envoy external-authorization service in Go. It receives the request headers, reads `Mcp-Method` and `Mcp-Name` and the caller's identity, and answers allow or deny
+- [ ] Put it in front of the MCP server through an Envoy-based Gateway API implementation that supports external authorization; record which one you used and how you wired it
+- [ ] Start with a static allow-list, then move the decision into a policy engine such as Open Policy Agent so rules change without a rebuild
+- [ ] Have the service read the request body as well, and reject any request whose headers and body disagree
+- [ ] Add a decision log and metrics, and carry the trace context through so one tool call shows up as one trace across agent, gateway, authorizer, and MCP server
+- [ ] Compare your service with agentgateway's built-in MCP authorization; write down what it does that yours does not
+- [ ] `as9-fault-finding`: break the path on purpose, one fault at a time (a wrong policy, a DNS rule that is too tight, an MTU mismatch, an authorizer that times out), and find each one with Hubble, `cilium-dbg monitor`, and [`pwru`](https://github.com/cilium/pwru). Keep the steps as a troubleshooting runbook
+- [ ] Checkpoint: given a dropped or denied request you have not seen before, say which layer stopped it within a few minutes
+
+## Goal 3: Contribute
+
+### Stage 7: Contribute upstream
 
 Goal: get a change reviewed and merged in a project people already use. Reviews take a while, so start small.
 
@@ -126,14 +176,14 @@ Goal: get a change reviewed and merged in a project people already use. Reviews 
 - [ ] If you needed a feature in the labs, open a design discussion for it, with your practice operator as the working reference
 - [ ] Checkpoint: one merged pull request
 
-## Goal 3: Verify
+## Goal 4: Verify
 
-### Stage 6: Attack suite and test matrix
+### Stage 8: Attack suite and test matrix
 
 Goal: prove what each existing option stops, and say plainly what it doesn't.
 
 - [ ] Attack suite: one scripted scenario per threat (unlisted domain, metadata address, cross-namespace Service, DNS exfiltration, unlisted tool, header and body mismatch), each with an expected result
-- [ ] Run it against each option: plain NetworkPolicy, agent-sandbox's managed policy, Cilium FQDN and L7 policy, and tool rules at agentgateway
+- [ ] Run it against each option: plain NetworkPolicy, agent-sandbox's managed policy, Cilium FQDN and L7 policy, tool rules at agentgateway, and your external-authorization service if you have built it
 - [ ] GKE session: create the cluster with [`terraform/gke-dataplane-v2`](terraform/gke-dataplane-v2/), enable FQDN network policy on it with `gcloud container clusters update`, run the suite, and destroy the cluster the same day
 - [ ] Confirm whether GKE Dataplane V2 accepts Cilium L7 rules, and record the result
 - [ ] Add container runtime to the matrix: runc and gVisor. One project reports that FQDN policy does not work with Kata guests; test it if you can, and record the result either way
@@ -154,6 +204,9 @@ Goal: prove what each existing option stops, and say plainly what it doesn't.
 | "What did the operator create for this agent?" | agent-sandbox and kagent labs | Kubernetes operators | Reading an operator from its custom resources and logs |
 | A sandbox created without a policy | Baseline deny-all in agent namespaces | Secure defaults | Failing closed instead of open |
 | Policy as an API | The practice operator | Go, operators | Extending Kubernetes instead of hand-writing YAML |
+| "Why was this request dropped?" | The dataplane walkthrough and the fault-finding runbook | eBPF, Cilium internals, troubleshooting | Naming the layer that stopped a request, with evidence |
+| Authorizing a tool call at the gateway | The external-authorization service | Go, Envoy, Gateway API, policy engines | Code in the traffic path that decides per identity and per tool |
+| One tool call, one trace | Trace context carried through gateway and authorizer | Observability | Following a request across network and application layers |
 | Which option stops which attack | The attack suite and matrix | Security evaluation | Choosing between existing tools with evidence |
 
 ## Risks and open questions
@@ -161,6 +214,9 @@ Goal: prove what each existing option stops, and say plainly what it doesn't.
 - **L7 header matching is unproven here.** Stage 1 tests it before anything else depends on it.
 - **GKE Dataplane V2 limits.** Reports say it rejects Cilium L7 rules, and FQDN network policy has its own requirements. Verify both in the GKE session.
 - **Fast-moving projects.** agent-sandbox and kagent release often, so pin a release for each lab and note it.
+- **Custom eBPF next to Cilium.** Loading your own program on an interface Cilium manages can conflict with it. Stage 6 uses the hand-built namespaces for that reason.
+- **External authorization differs by gateway.** Each Gateway API implementation wires it up its own way, and some don't support it. Check before you choose one.
+- **ztunnel is beta.** The mutual TLS task may change between Cilium releases; a service mesh is the fallback.
 - **Upstream timing.** A merge is not in your control. The labs and the matrix stand on their own.
 - **Cost.** Stop the lab VM between sessions and destroy cloud clusters the same day, as in the study plan.
 
@@ -178,6 +234,10 @@ Answer each of these out loud without notes.
 8. When you create an agent in kagent, what does the operator create, and what does it report in status?
 9. How does agent-sandbox manage network policy, and what happens to a Sandbox created directly?
 10. A prompt-injected agent holds valid credentials for one MCP server. Which controls still limit the damage, and which do not?
+11. Follow one HTTP request from an agent pod to an MCP server on another node. Which eBPF programs and maps does it touch, and where does Envoy come in?
+12. How does Cilium turn pod labels into a security identity, and why does policy by identity survive a pod restart with a new IP?
+13. What does an Envoy external-authorization service receive, what can it answer, and what should happen when it is slow or down?
+14. What does mutual TLS between workloads prove that node-to-node encryption does not?
 
 ## Progress
 
@@ -187,8 +247,10 @@ Answer each of these out loud without notes.
 | Get familiar | 2 | Go fundamentals | Not started |
 | Get familiar | 3 | How operators run agents | Not started |
 | Get familiar | 4 | Write a practice operator | Not started |
-| Contribute | 5 | Contribute upstream | Not started |
-| Verify | 6 | Attack suite and test matrix | Not started |
+| Go deep | 5 | Explain the dataplane | Not started |
+| Go deep | 6 | Build and debug at L7 | Not started |
+| Contribute | 7 | Contribute upstream | Not started |
+| Verify | 8 | Attack suite and test matrix | Not started |
 
 ## Sources
 
@@ -205,3 +267,7 @@ Answer each of these out loud without notes.
 - [Kubebuilder book](https://book.kubebuilder.io)
 - [controller-runtime](https://github.com/kubernetes-sigs/controller-runtime)
 - [A Tour of Go](https://go.dev/tour/)
+- [cilium/ebpf](https://github.com/cilium/ebpf)
+- [pwru](https://github.com/cilium/pwru)
+- [Envoy](https://www.envoyproxy.io)
+- [Open Policy Agent](https://www.openpolicyagent.org)
