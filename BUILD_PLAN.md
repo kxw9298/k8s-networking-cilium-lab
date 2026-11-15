@@ -84,7 +84,7 @@ Labs for this plan go under [`labs/`](labs/) with the prefix `as` (agent securit
 
 ## Study first, then build
 
-Each stage has a study step and a build step, in that order. The study step is in the topic guides under [`guides/`](guides/): concepts in order, what to read, short drills, pitfalls, and a readiness check. Finish the guides listed for a stage, and pass their readiness checks, before you start that stage's labs.
+Each stage has a study step and a build step, in that order. The study step is in the topic guides under [`guides/`](guides/): key fundamentals, what to read, short drills, pitfalls, and the questions you should be able to answer afterwards. Finish the guides listed for a stage, and be able to answer their questions out loud, before you start that stage's labs.
 
 | Stage | Study these guides first |
 | --- | --- |

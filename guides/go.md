@@ -2,36 +2,33 @@
 
 Covers the Go you need to read operator code and to write a CNI plugin, an eBPF loader, and a small network service. It assumes you already program in another language.
 
-Finish the Study part and pass the readiness check before you start the Labs part.
+Study the key fundamentals, and make sure you can answer the questions at the end of the Study part, before you start the Labs part.
 
 ## Study
 
-### Concepts, in order
+### Key fundamentals
 
 | # | Concept | What to understand |
 | --- | --- | --- |
-| 1 | Toolchain and modules | `go mod init`, `go build`, `go run`, `go test`, `go vet`, `gofmt`; what `go.mod` and `go.sum` record; packages, and that a capitalised name is exported |
-| 2 | Types and zero values | Basic types, structs, arrays, slices, and maps; every type has a zero value; `:=` versus `var`; constants |
-| 3 | Slices and maps in depth | A slice is a view (pointer, length, capacity) over an array; `append` may or may not copy; nil versus empty; map iteration order is random; the two-value lookup |
-| 4 | Functions and methods | Multiple return values, closures, `defer` and when its arguments are evaluated; value receivers versus pointer receivers |
-| 5 | Pointers | When to pass a pointer and when a value; nil pointers; no pointer arithmetic |
-| 6 | Interfaces | Satisfied implicitly; keep them small; an interface value holds a type and a value, so an interface holding a nil pointer is not nil; type assertions and type switches |
-| 7 | Errors | Errors are values that you return and check; wrap with `%w`; test with `errors.Is` and `errors.As`; panic is for bugs, not for expected failures |
-| 8 | Generics | Type parameters and constraints, at the level needed to read library code that uses them |
-| 9 | Concurrency | Goroutines, channels, `select`, `sync.WaitGroup`, `sync.Mutex`; what a data race is and how the race detector finds one; how goroutines leak |
-| 10 | Context | Cancellation and deadlines passed down a call chain; `ctx` is the first parameter; every Kubernetes client call and every gRPC call takes one |
-| 11 | Testing | The `testing` package, table-driven tests, subtests, test helpers, `httptest`, coverage |
-| 12 | Encoding and struct tags | `encoding/json`, tags such as `json:"name,omitempty"`, embedded structs; this is how Kubernetes API types map to YAML |
-| 13 | Standard library | `net/http`, `io`, `os`, `time`, `flag`, and structured logging with `log/slog` |
-| 14 | Project layout and delivery | `cmd/` and `internal/`, a Makefile, a linter, and building a small static binary into a container image |
+| 1 | Toolchain and modules | `go mod init`, `go build`, `go test`, `go vet`, `gofmt`; what `go.mod` and `go.sum` record; packages, and that a capitalised name is exported |
+| 2 | Types and zero values | Basic types, structs, arrays, slices, and maps; every type has a zero value; `:=` versus `var` |
+| 3 | Slices and maps | A slice is a view (pointer, length, capacity) over an array; `append` may or may not copy; nil versus empty; map iteration order is random; the two-value lookup |
+| 4 | Functions, methods, and pointers | Multiple return values and closures; `defer` runs at function return, last in first out, with arguments evaluated when it is declared; value receivers versus pointer receivers |
+| 5 | Interfaces | Satisfied implicitly; keep them small; an interface value holds a type and a value, so an interface holding a nil pointer is not nil |
+| 6 | Errors | Errors are values that you return and check; wrap with `%w`; test with `errors.Is` and `errors.As`; `panic` is for bugs, and `recover` only works inside a deferred function |
+| 7 | Goroutines and channels | A goroutine is a cheap thread managed by the runtime; an unbuffered channel hands over a value when both sides are ready, a buffered one blocks only when full; sending on a closed channel panics, receiving from a closed and drained one returns the zero value at once, and a nil channel blocks forever; `select` waits on several |
+| 8 | Sharing and races | `sync.WaitGroup` to wait, `sync.Mutex` to protect shared state; a data race is unsynchronised access where at least one side writes; `go test -race` finds them; a goroutine with no way to exit is a leak |
+| 9 | Context | Cancellation and deadlines passed down a call chain; `ctx` is the first parameter; every Kubernetes client call and every gRPC call takes one |
+| 10 | Testing | The `testing` package, table-driven tests, subtests, and `httptest` |
+| 11 | JSON and struct tags | `encoding/json` and tags such as `json:"name,omitempty"`; this is how Kubernetes API types map to YAML |
+| 12 | Building a service | `net/http`, `io.Reader` and `io.Writer`, structured logging with `log/slog`, a `cmd/` and `internal/` layout, and a small static binary in a container image |
 
 ### Reading
 
-1. Concepts 1 to 6: [A Tour of Go](https://go.dev/tour/), doing every exercise.
-2. Concepts 2 to 8, as a reference while you write: [Go by Example](https://gobyexample.com).
-3. Concepts 7, 9, and 11, with practice built in: [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests).
-4. Concept 10: [Go Concurrency Patterns: Context](https://go.dev/blog/context).
-5. Style and idiom, once the basics are in place: [Effective Go](https://go.dev/doc/effective_go).
+1. Rows 1 to 5: [A Tour of Go](https://go.dev/tour/), doing every exercise, and [Go Slices: usage and internals](https://go.dev/blog/slices-intro) for row 3.
+2. Rows 6, 7, 8, and 10, with practice built in: [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests).
+3. Row 9: [Go Concurrency Patterns: Context](https://go.dev/blog/context).
+4. As a reference while you write: [Go by Example](https://gobyexample.com), and [Effective Go](https://go.dev/doc/effective_go) for idiom.
 
 ### Drills
 
@@ -39,37 +36,49 @@ Small programs that take one sitting each. They are part of studying, not labs.
 
 - [ ] A command-line word counter that reads a file, with table-driven tests for the counting function
 - [ ] The same program returning wrapped errors for a missing file and a bad flag, with a test that checks each with `errors.Is`
-- [ ] A function that takes an `io.Reader`, tested with `strings.NewReader` instead of a real file
 - [ ] An HTTP server with one JSON endpoint, tested with `httptest`, that shuts down cleanly when its context is cancelled
 - [ ] A concurrent URL checker with a fixed number of workers and a per-request timeout, passing `go test -race`
 - [ ] Decode a Kubernetes manifest from YAML into a struct you wrote, using struct tags
 
-### Pitfalls to know before you build
+### Pitfalls
 
 - An interface holding a nil pointer does not equal nil. Return a plain `nil` error, not a nil pointer of an error type.
 - Writing to a nil map panics. Appending to a nil slice is fine.
 - Two slices can share one underlying array, so a change through one can show up in the other.
 - `:=` inside a block creates a new variable. It is easy to shadow `err` and lose an error.
 - A goroutine blocked on a channel nobody reads from never exits.
-- Ignoring a returned error compiles. Check every one.
 - A `defer` inside a loop runs when the function returns, not at the end of each iteration.
 
-### Readiness check
+### Questions you should be able to answer
 
-Answer each out loud without notes.
+After studying this guide, you should be able to answer the questions below. Answer each out loud, without notes, in about two minutes. The right-hand column is a checklist of what a strong answer covers, not a script.
 
-1. What is the difference between a nil slice and an empty slice, and when does `append` copy?
-2. When do you choose a pointer receiver?
-3. Why can an interface value be non-nil when the pointer inside it is nil?
-4. How do you add context to an error and still let a caller test for the original?
-5. What does `context.Context` carry, and what should a function do when it is cancelled?
-6. What is a data race, and how do you find one?
-7. Why are table-driven tests the usual shape for Go tests?
-8. How does a struct tag change the way a field is encoded?
+| # | Question | A strong answer covers |
+| --- | --- | --- |
+| 1 | What is the difference between an array and a slice, and what happens on `append`? | An array has a fixed size that is part of its type; a slice is a pointer, a length, and a capacity over an array; `append` writes in place while capacity allows and otherwise allocates and copies, so two slices can share memory or silently stop sharing it |
+| 2 | How do interfaces work, and what is the nil-interface trap? | Implicit satisfaction; small interfaces defined where they are used; an interface value is a type plus a value, so one holding a nil pointer is not equal to nil; return a plain `nil` error |
+| 3 | When do you use a pointer receiver? | When the method changes the receiver, when the struct is large or holds a mutex, and for consistency across a type's methods; it also decides whether a value or only a pointer satisfies an interface |
+| 4 | How does Go handle errors, and when is `panic` right? | Errors are returned values; add context with `%w`; callers test with `errors.Is` and `errors.As`; `panic` is for programmer bugs; `recover` in a deferred function at a boundary such as a request handler |
+| 5 | What is a goroutine, and how do you coordinate several? | Cheap, scheduled by the runtime onto OS threads; channels to pass data, `WaitGroup` to wait, `Mutex` for shared state, context to cancel; pick one owner for each piece of data |
+| 6 | Explain how channels behave: buffered, unbuffered, closed, and nil. | Unbuffered synchronises sender and receiver; buffered blocks only when full or empty; send on closed panics; receive on closed returns the zero value and `false`; nil blocks forever; the sender closes |
+| 7 | What is `context.Context` for? | Cancellation, deadlines, and request-scoped values down a call chain; first parameter; long work watches `ctx.Done()`; always call the cancel function; not a bag for optional arguments |
+| 8 | How do you find and prevent data races and goroutine leaks? | A race is concurrent access with a write and no synchronisation; the race detector in tests and CI; a mutex or a single owning goroutine; every goroutine needs a way out (context or a closed channel); a goroutine profile shows leaks |
+
+**Coding prompt to practise.** Write a worker pool: a fixed number of workers read URLs from a channel, fetch each with a per-request timeout, and send results back; the program stops cleanly when its context is cancelled. Then say how you would test it.
+
+### Go further
+
+Optional. Come back to these after the labs.
+
+- Generics, to the level needed to read library code that uses type parameters
+- The scheduler and garbage collector at a high level
+- Profiling with `pprof`
+- `errgroup` and other patterns from `golang.org/x/sync`
+- A linter and a Makefile for a real project
 
 ## Labs
 
-Do these after the readiness check.
+Do these once you can answer the questions above.
 
 - [ ] [STUDY_PLAN.md](../STUDY_PLAN.md), "CNI internals": rewrite the bash CNI plugin in Go
 - [ ] [BUILD_PLAN.md](../BUILD_PLAN.md) stage 2: tests for the CNI plugin, and the client-go informer program
@@ -78,6 +87,7 @@ Do these after the readiness check.
 ## Sources
 
 - [A Tour of Go](https://go.dev/tour/)
+- [Go Slices: usage and internals](https://go.dev/blog/slices-intro)
 - [Go by Example](https://gobyexample.com)
 - [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests)
 - [Go Concurrency Patterns: Context](https://go.dev/blog/context)
