@@ -88,16 +88,16 @@ Each stage has a study step and a build step, in that order. The study step is i
 
 | Stage | Study these guides first |
 | --- | --- |
-| 1. Cilium for agent workloads | [Cilium](guides/cilium.md), [MCP and agent security](guides/mcp-agent-security.md) |
+| 1. Cilium for agent workloads | [Cilium](guides/cilium.md), [Kubernetes and container security](guides/kubernetes-security.md), [OAuth, OIDC, and JWT](guides/oauth-oidc-jwt.md), [MCP and agent security](guides/mcp-agent-security.md) |
 | 2. Go fundamentals | [Go](guides/go.md), [gRPC](guides/grpc.md) |
 | 3. How operators run agents | [Kubernetes controllers and operators](guides/kubernetes-controllers.md) |
 | 4. Operator fundamentals | [Kubernetes controllers and operators](guides/kubernetes-controllers.md) |
-| 5. Explain the dataplane | [eBPF](guides/ebpf.md), [Cilium](guides/cilium.md), [Envoy and Gateway API](guides/envoy-gateway-api.md) |
+| 5. Explain the dataplane | [eBPF](guides/ebpf.md), [Cilium](guides/cilium.md), [TLS, PKI, and mutual TLS](guides/tls-mtls.md), [Envoy and Gateway API](guides/envoy-gateway-api.md) |
 | 6. Build and debug at L7 | [gRPC](guides/grpc.md), [Envoy and Gateway API](guides/envoy-gateway-api.md) |
 | 7. Contribute upstream | [Kubernetes controllers and operators](guides/kubernetes-controllers.md) |
-| 8. Attack suite and test matrix | [MCP and agent security](guides/mcp-agent-security.md) |
+| 8. Attack suite and test matrix | [MCP and agent security](guides/mcp-agent-security.md), [Kubernetes and container security](guides/kubernetes-security.md) |
 
-The study plan's own labs follow the same rule: [Kubernetes networking](guides/kubernetes-networking.md) comes before its networking and CNI labs, and [eBPF](guides/ebpf.md) and [Cilium](guides/cilium.md) before its Cilium labs. [`guides/README.md`](guides/README.md) gives a suggested order for all eight guides.
+The study plan's own labs follow the same rule: [Kubernetes networking](guides/kubernetes-networking.md) comes before its networking and CNI labs, and [eBPF](guides/ebpf.md) and [Cilium](guides/cilium.md) before its Cilium labs. [`guides/README.md`](guides/README.md) gives a suggested order for all the guides.
 
 ## Goal 1: Get familiar
 
@@ -105,7 +105,7 @@ The study plan's own labs follow the same rule: [Kubernetes networking](guides/k
 
 Goal: show, by hand, that a compromised agent cannot send data out.
 
-Study first: [Cilium](guides/cilium.md) and [MCP and agent security](guides/mcp-agent-security.md).
+Study first: [Cilium](guides/cilium.md), [Kubernetes and container security](guides/kubernetes-security.md), [OAuth, OIDC, and JWT](guides/oauth-oidc-jwt.md), and [MCP and agent security](guides/mcp-agent-security.md).
 
 **Core** (the whole stage)
 
@@ -200,7 +200,7 @@ status:
 
 Goal: explain, from the kernel up, what happens to one agent request.
 
-Study first: [eBPF](guides/ebpf.md), [Cilium](guides/cilium.md), and [Envoy and Gateway API](guides/envoy-gateway-api.md).
+Study first: [eBPF](guides/ebpf.md), [Cilium](guides/cilium.md), [TLS, PKI, and mutual TLS](guides/tls-mtls.md), and [Envoy and Gateway API](guides/envoy-gateway-api.md).
 
 **Core**
 
@@ -259,7 +259,7 @@ Study first: [Kubernetes controllers and operators](guides/kubernetes-controller
 
 Goal: prove what each existing option stops, and say plainly what it doesn't. This stage comes after the core path.
 
-Study first: [MCP and agent security](guides/mcp-agent-security.md).
+Study first: [MCP and agent security](guides/mcp-agent-security.md) and [Kubernetes and container security](guides/kubernetes-security.md).
 
 - [ ] Attack suite: one scripted scenario per threat (unlisted domain, metadata address, cross-namespace Service, DNS exfiltration, unlisted tool, header and body mismatch), each with an expected result
 - [ ] Run it against each option: plain NetworkPolicy, agent-sandbox's managed policy, Cilium FQDN and L7 policy, tool rules at agentgateway, and your external-authorization service if you have built it

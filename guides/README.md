@@ -16,11 +16,14 @@ Finish a guide's Study part, and be able to answer its questions out loud, befor
 | Networking basics, Linux networking, Services, DNS, NetworkPolicy, CNI | [kubernetes-networking.md](kubernetes-networking.md) | STUDY_PLAN.md: "Linux and Kubernetes networking" and "CNI internals" |
 | eBPF | [ebpf.md](ebpf.md) | STUDY_PLAN.md: "eBPF and Cilium core"; BUILD_PLAN.md stages 5 and 6 |
 | Cilium | [cilium.md](cilium.md) | STUDY_PLAN.md: "eBPF and Cilium core" and "Cilium advanced"; BUILD_PLAN.md stages 1 and 5 |
+| Kubernetes and container security | [kubernetes-security.md](kubernetes-security.md) | BUILD_PLAN.md stages 1, 3, and 8 |
+| OAuth, OIDC, and JWT | [oauth-oidc-jwt.md](oauth-oidc-jwt.md) | BUILD_PLAN.md stages 1 and 6 |
 | MCP and agent security | [mcp-agent-security.md](mcp-agent-security.md) | BUILD_PLAN.md stages 1, 3, 6, and 8 |
 | Go | [go.md](go.md) | STUDY_PLAN.md: the Go CNI plugin; BUILD_PLAN.md stage 2 and every stage after it |
 | gRPC | [grpc.md](grpc.md) | BUILD_PLAN.md stage 2 (gRPC task) and stage 6 |
 | Kubernetes controllers and operators | [kubernetes-controllers.md](kubernetes-controllers.md) | BUILD_PLAN.md stages 3, 4, and 7 |
-| Envoy and Gateway API | [envoy-gateway-api.md](envoy-gateway-api.md) | BUILD_PLAN.md stages 5 and 6 |
+| TLS, PKI, and mutual TLS | [tls-mtls.md](tls-mtls.md) | STUDY_PLAN.md: "Cilium advanced"; BUILD_PLAN.md stages 5 and 6 |
+| HTTP basics, Envoy, and Gateway API | [envoy-gateway-api.md](envoy-gateway-api.md) | BUILD_PLAN.md stages 5 and 6 |
 
 ## Suggested order
 
@@ -31,10 +34,10 @@ There are two ways to follow it. Study every guide first, top to bottom, and the
 | 1 | Kubernetes networking | STUDY_PLAN.md: "Linux and Kubernetes networking" |
 | 2 | Go | STUDY_PLAN.md: "CNI internals", including the Go plugin |
 | 3 | eBPF, then Cilium | STUDY_PLAN.md: "eBPF and Cilium core" |
-| 4 | MCP and agent security | BUILD_PLAN.md stage 1 |
+| 4 | Kubernetes and container security; OAuth, OIDC, and JWT; then MCP and agent security | BUILD_PLAN.md stage 1 |
 | 5 | gRPC | BUILD_PLAN.md stage 2 |
 | 6 | Kubernetes controllers and operators | BUILD_PLAN.md stages 3 and 4 |
-| 7 | Envoy and Gateway API | BUILD_PLAN.md stages 5 and 6 |
+| 7 | TLS, PKI, and mutual TLS, then Envoy and Gateway API | BUILD_PLAN.md stages 5 and 6 |
 
 The guides add no new labs. Every item under a guide's Labs heading points to a task that already exists in one of the two plans.
 
@@ -54,4 +57,5 @@ These combine several guides. Try them once all the guides are done, and again a
 2. Compare enforcing a rule in a NetworkPolicy, in a Cilium L7 policy, at a gateway with external authorization, and in the application. What does each see, and what does each miss?
 3. An agent can reach the model API, but its tool calls time out. Find the cause, working layer by layer.
 4. You are asked to move a cluster from kube-proxy and iptables to an eBPF dataplane. What do you check first, and how do you roll it out?
-5. Design a platform for running AI agents for several teams on Kubernetes, and say which parts you would build, which you would adopt, and how you would prove the controls work.
+5. A token is stolen from an agent pod. Say what the attacker can do with it, and which controls at the token, network, and cluster layers limit the damage.
+6. Design a platform for running AI agents for several teams on Kubernetes, and say which parts you would build, which you would adopt, and how you would prove the controls work.

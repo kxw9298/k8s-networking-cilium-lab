@@ -21,16 +21,18 @@ Study the key fundamentals, and make sure you can answer the questions at the en
 | 9 | Status and conditions | Status reports what the controller observed; conditions have a type, a status, a reason, and a message; `observedGeneration` says which version of the spec the status describes |
 | 10 | Conflicts | Updates use optimistic concurrency on `resourceVersion`; a stale write is rejected and retried; update, patch, and server-side apply differ in how they merge |
 | 11 | Testing | Unit tests for pure functions; envtest runs a real API server and etcd with no kubelet and no built-in controllers; end-to-end tests on kind |
-| 12 | Production readiness | Leader election so only one replica acts, a service account with only the permissions needed, metrics, health probes, structured logs, and a plan for upgrading a custom resource's versions |
+| 12 | Admission | Mutating webhooks run first and may change an object; validating webhooks run after and can only accept or reject; a failure policy decides what happens when a webhook is down; validation rules in the schema and CEL admission policies cover many cases without a webhook |
+| 13 | Production readiness | Leader election so only one replica acts, a service account with only the permissions needed, metrics, health probes, structured logs, and a plan for upgrading a custom resource's versions |
 
 ### Reading
 
 1. Rows 1 to 4: Kubernetes documentation on [controllers](https://kubernetes.io/docs/concepts/architecture/controller/), [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/), and the [operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
 2. Row 5: the README and code of [`sample-controller`](https://github.com/kubernetes/sample-controller), which shows informers and a work queue without a framework.
-3. Rows 6, 7, and 12: the [Kubebuilder book](https://book.kubebuilder.io), read through the CronJob tutorial once before typing any of it.
+3. Rows 6, 7, and 13: the [Kubebuilder book](https://book.kubebuilder.io), read through the CronJob tutorial once before typing any of it.
 4. Row 8: Kubernetes documentation on [owners and dependents](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/) and [finalizers](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/).
 5. Row 9: the status and conditions sections of the [Kubernetes API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md).
 6. Row 11: the Kubebuilder book's page on [envtest](https://book.kubebuilder.io/reference/envtest).
+7. Row 12: Kubernetes documentation on [dynamic admission control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/). [kubernetes-security.md](kubernetes-security.md) covers admission as a security control.
 
 ### Drills
 
@@ -66,6 +68,7 @@ After studying this guide, you should be able to answer the questions below. Ans
 | 6 | Two writers update the same object at once. What happens? | Each write carries a `resourceVersion`; the second is rejected with a conflict; re-read and retry, or use a patch or server-side apply so that each writer owns only its own fields; never retry with stale data |
 | 7 | What makes an operator production-ready? | Leader election, least-privilege permissions, metrics and alerts on reconcile errors and queue depth, health probes, conditions that tell a user what is wrong, tests at three levels, and safe upgrades of the custom resource's versions |
 | 8 | When would you write an operator instead of using Helm or GitOps? | Helm and GitOps apply manifests and stop; an operator keeps acting after install, for example failover, backup, scaling on a custom signal, or managing something outside the cluster; the cost is code to maintain and wide permissions, so prefer an existing operator when one fits |
+| 9 | What is the difference between a mutating and a validating webhook, and what can go wrong with them? | Mutating runs first and can change the object, validating runs last and only accepts or rejects; every matching API request waits for the webhook, so latency and timeouts matter; failing open stops enforcement, failing closed can block the cluster, so scope it narrowly and exclude system namespaces; prefer schema rules or a CEL admission policy when they are enough |
 
 **Design prompt to practise.** Design a custom resource and controller that gives each agent workload an egress allow-list. Say what goes in `spec` and in `status`, which objects the controller owns, how it reacts when someone edits one of those objects by hand, and what happens on deletion.
 
@@ -73,7 +76,7 @@ After studying this guide, you should be able to answer the questions below. Ans
 
 Optional. Come back to these after the labs.
 
-- Writing validating and mutating admission webhooks, and when schema validation rules are enough
+- Writing and testing an admission webhook
 - Serving several versions of a custom resource, with conversion
 - Server-side apply and field ownership in depth
 - The client-go internals under an informer
@@ -96,6 +99,7 @@ Do these once you can answer the questions above.
 - [Kubernetes: Owners and dependents](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/)
 - [Kubernetes: Finalizers](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
 - [Kubernetes API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md)
+- [Kubernetes: Dynamic admission control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/)
 - [Kubebuilder book](https://book.kubebuilder.io)
 - [Kubebuilder book: envtest](https://book.kubebuilder.io/reference/envtest)
 - [sample-controller](https://github.com/kubernetes/sample-controller)

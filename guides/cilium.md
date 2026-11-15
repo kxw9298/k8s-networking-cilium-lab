@@ -20,7 +20,7 @@ Study the key fundamentals, and make sure you can answer the questions at the en
 | 8 | DNS-aware policy | `toFQDNs` allows destinations by name; a DNS rule sends the pod's lookups through Cilium's DNS proxy, which records the name-to-IP answers that the policy then uses |
 | 9 | L7 policy | HTTP rules by method, path, and headers; matching traffic is redirected to Envoy, which allows each request or rejects it with a 403 |
 | 10 | Hubble | Flow records with a verdict (forwarded, dropped, redirected) and a drop reason; the CLI, the relay that aggregates across nodes, and the service map |
-| 11 | Encryption | WireGuard and IPsec encrypt traffic between nodes; that protects the wire but does not prove which workload is on the other end |
+| 11 | Encryption | WireGuard and IPsec encrypt traffic between nodes; that protects the wire but does not prove which workload is on the other end ([tls-mtls.md](tls-mtls.md) covers the difference) |
 | 12 | Managed offerings | GKE Dataplane V2 and Azure CNI Powered by Cilium are built on Cilium and expose only part of it; on EKS you install Cilium yourself |
 
 ### Reading

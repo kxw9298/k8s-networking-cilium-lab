@@ -2,7 +2,7 @@
 
 Covers how AI agents and the Model Context Protocol (MCP) work, how agents are authorized, what can go wrong, and which control answers which threat. It gives the security reasoning behind every stage of [BUILD_PLAN.md](../BUILD_PLAN.md).
 
-Study the key fundamentals, and make sure you can answer the questions at the end of the Study part, before you start the Labs part.
+Study the key fundamentals, and make sure you can answer the questions at the end of the Study part, before you start the Labs part. Read [oauth-oidc-jwt.md](oauth-oidc-jwt.md) and [kubernetes-security.md](kubernetes-security.md) first: rows 4 and 5 build on the first, rows 10 and 11 on the second.
 
 ## Study
 
