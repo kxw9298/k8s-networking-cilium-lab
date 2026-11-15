@@ -82,11 +82,30 @@ The Cluster Mesh and BGP labs are not prerequisites for any stage here. The Wire
 
 Labs for this plan go under [`labs/`](labs/) with the prefix `as` (agent security) in place of a study plan number, for example `labs/as1-agent-egress-baseline/`. Follow the same lab format as the rest of the repo, and record the versions of Cilium, agent-sandbox, kagent, and the MCP SDK each lab was run against.
 
+## Study first, then build
+
+Each stage has a study step and a build step, in that order. The study step is in the topic guides under [`guides/`](guides/): key fundamentals, what to read, short drills, pitfalls, and the questions you should be able to answer afterwards. Finish the guides listed for a stage, and be able to answer their questions out loud, before you start that stage's labs.
+
+| Stage | Study these guides first |
+| --- | --- |
+| 1. Cilium for agent workloads | [Cilium](guides/cilium.md), [Kubernetes and container security](guides/kubernetes-security.md), [OAuth, OIDC, and JWT](guides/oauth-oidc-jwt.md), [MCP and agent security](guides/mcp-agent-security.md) |
+| 2. Go fundamentals | [Go](guides/go.md), [gRPC](guides/grpc.md) |
+| 3. How operators run agents | [Kubernetes controllers and operators](guides/kubernetes-controllers.md) |
+| 4. Operator fundamentals | [Kubernetes controllers and operators](guides/kubernetes-controllers.md) |
+| 5. Explain the dataplane | [eBPF](guides/ebpf.md), [Cilium](guides/cilium.md), [TLS, PKI, and mutual TLS](guides/tls-mtls.md), [Envoy and Gateway API](guides/envoy-gateway-api.md) |
+| 6. Build and debug at L7 | [gRPC](guides/grpc.md), [Envoy and Gateway API](guides/envoy-gateway-api.md) |
+| 7. Contribute upstream | [Kubernetes controllers and operators](guides/kubernetes-controllers.md) |
+| 8. Attack suite and test matrix | [MCP and agent security](guides/mcp-agent-security.md), [Kubernetes and container security](guides/kubernetes-security.md) |
+
+The study plan's own labs follow the same rule: [Kubernetes networking](guides/kubernetes-networking.md) comes before its networking and CNI labs, and [eBPF](guides/ebpf.md) and [Cilium](guides/cilium.md) before its Cilium labs. [`guides/README.md`](guides/README.md) gives a suggested order for all the guides.
+
 ## Goal 1: Get familiar
 
 ### Stage 1: Cilium for agent workloads
 
 Goal: show, by hand, that a compromised agent cannot send data out.
+
+Study first: [Cilium](guides/cilium.md), [Kubernetes and container security](guides/kubernetes-security.md), [OAuth, OIDC, and JWT](guides/oauth-oidc-jwt.md), and [MCP and agent security](guides/mcp-agent-security.md).
 
 **Core** (the whole stage)
 
@@ -103,6 +122,8 @@ Goal: show, by hand, that a compromised agent cannot send data out.
 
 Goal: read and write everyday Go without looking things up.
 
+Study first: [Go](guides/go.md), then [gRPC](guides/grpc.md) before the gRPC task.
+
 **Core** (the whole stage)
 
 - [ ] Finish [A Tour of Go](https://go.dev/tour/)
@@ -115,6 +136,8 @@ Goal: read and write everyday Go without looking things up.
 ### Stage 3: How operators run agents
 
 Goal: see what an operator does for an AI agent before you write one.
+
+Study first: [Kubernetes controllers and operators](guides/kubernetes-controllers.md).
 
 **Core**
 
@@ -133,6 +156,8 @@ Goal: see what an operator does for an AI agent before you write one.
 ### Stage 4: Operator fundamentals
 
 Goal: understand the operator pattern well enough to read one. Writing your own is an extension, and becomes necessary before you contribute to operator code in stage 7.
+
+Study first: [Kubernetes controllers and operators](guides/kubernetes-controllers.md), if not already done for stage 3.
 
 **Core**
 
@@ -175,6 +200,8 @@ status:
 
 Goal: explain, from the kernel up, what happens to one agent request.
 
+Study first: [eBPF](guides/ebpf.md), [Cilium](guides/cilium.md), [TLS, PKI, and mutual TLS](guides/tls-mtls.md), and [Envoy and Gateway API](guides/envoy-gateway-api.md).
+
 **Core**
 
 - [ ] `as6-dataplane-walkthrough`: pick one request from the Stage 1 lab (agent to MCP server) and trace it hop by hop: pod veth, the eBPF programs on it, the policy lookup, the redirect to Envoy for L7, and the reply path
@@ -192,6 +219,8 @@ Goal: explain, from the kernel up, what happens to one agent request.
 ### Stage 6: Build and debug at L7
 
 Goal: write code that sits in the traffic path, and find faults in it.
+
+Study first: [gRPC](guides/grpc.md) and [Envoy and Gateway API](guides/envoy-gateway-api.md).
 
 **Core**
 
@@ -216,6 +245,8 @@ Goal: write code that sits in the traffic path, and find faults in it.
 
 Goal: get a change reviewed and merged in a project people already use. Reviews take a while, so start small. This stage comes after the core path; do the practice operator extension in stage 4 before you touch controller code.
 
+Study first: [Kubernetes controllers and operators](guides/kubernetes-controllers.md).
+
 - [ ] Read the agent-sandbox contributing guide and follow its issue tracker; note any documentation or example gap you hit in Stage 3
 - [ ] Open a small pull request, for example a Cilium FQDN egress example next to the project's existing network policy examples
 - [ ] Pick up a small bug or test task in the controller code
@@ -227,6 +258,8 @@ Goal: get a change reviewed and merged in a project people already use. Reviews 
 ### Stage 8: Attack suite and test matrix
 
 Goal: prove what each existing option stops, and say plainly what it doesn't. This stage comes after the core path.
+
+Study first: [MCP and agent security](guides/mcp-agent-security.md) and [Kubernetes and container security](guides/kubernetes-security.md).
 
 - [ ] Attack suite: one scripted scenario per threat (unlisted domain, metadata address, cross-namespace Service, DNS exfiltration, unlisted tool, header and body mismatch), each with an expected result
 - [ ] Run it against each option: plain NetworkPolicy, agent-sandbox's managed policy, Cilium FQDN and L7 policy, tool rules at agentgateway, and your external-authorization service if you have built it
